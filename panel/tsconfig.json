@@ -1,0 +1,19 @@
+{
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./node_modules/@types"]
+    // remove explicit missing libs from `types`
+    // if you need bun/vite ambient types install them:
+    // npm install -D bun-types @types/vite
+    // then set "types": ["bun-types", "vite/client"]
+  }
+}
+

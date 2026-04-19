@@ -1,49 +1,68 @@
-# --- Oprogramowanie wbudowane (nRF54L15 / nRF5340) ---
-# Ignoruj katalogi budowania (standard w nRF Connect SDK / Zephyr)
+# --- Nordic / Zephyr RTOS (scan_adv, scan_slave) ---
+# Ignoruj wszystkie foldery budowania oprogramowania
 build/
+build_*/
 zephyr/
 modules/
 tools/
-# Pliki generowane przez CMake i kompilatory
+nrf/
+
+# Pliki generowane przez CMake i Ninja
 *.ninja
+*.ninja_deps
+*.ninja_log
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
+CMakeLists.txt.user
 
-# --- Web / Bun / Vite (SentiGuard UI) ---
-# Zależności instalowane przez Bun
+# Pliki binarne i artefakty kompilacji
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.obj
+*.o
+
+# --- Bun / Vite Website (panel) ---
+# Zależności i pakiety
 node_modules/
-# Wynik budowania produkcyjnego Vite
+bun.lockb
+
+# Wyniki budowania frontendu
 dist/
-# Pliki środowiskowe i logi
-.env
-.env.local
-.env.*.local
+dist-ssr/
+*.local
+
+# Logi Bun i Vite
+bun-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-bun-debug.log*
+.vite-inspect
 
-# --- Dane dynamiczne projektu ---
-# Plik panel_data.json jest generowany w czasie rzeczywistym i nie powinien być w repozytorium
+# --- Dane dynamiczne i mostek (bridge) ---
+# Ignoruj plik z danymi, który jest nadpisywany co sekundę
 panel_data.json
 
-# --- Python (Mostki i symulatory) ---
-# Pliki tymczasowe Pythona
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
-# Wirtualne środowiska
-.venv/
+*.so
+.Python
+env/
 venv/
-ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # --- Systemowe i IDE ---
 .DS_Store
 Thumbs.db
-# Ustawienia VS Code (opcjonalnie można odkomentować, jeśli pracujesz w zespole)
-# .vscode/
-# Pliki tymczasowe edytorów
-*.swp
 *.bak
 *~
+
+# Ustawienia VS Code (opcjonalnie - odkomentuj jeśli chcesz ignorować)
+#.vscode/

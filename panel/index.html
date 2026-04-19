@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SentiGuard — Live Drone Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:wght@700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+<style>
+
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --black:       #0d0f10;
+  --dark:        #111314;
+  --dark2:       #181a1b;
+  --dark3:       #1e2022;
+  --border:      rgba(255,255,255,0.07);
+  --border-mid:  rgba(255,255,255,0.12);
+  --off-white:   #f0f0ee;
+  --muted:       rgba(240,240,238,0.35);
+  --muted2:      rgba(240,240,238,0.55);
+  --danger:      #ff5c5c;
+  --warn:        #f5a623;
+  --safe:        #5cdb95;
+  --font-display: 'Fraunces', serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --panel-w:      320px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--black);
+  color: var(--off-white);
+  font-family: var(--font-body);
+}
+
+/* ── LAYOUT ── */
+#app {
+  display: grid;
+  grid-template-columns: 1fr var(--panel-w);
+  grid-template-rows: 1fr auto;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── MAP ── */
+#map {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  min-height: 0;
+}
+
+#map::after {
+  content: 'LIVE';
+  position: absolute;
+  top: 14px; left: 14px;
+  z-index: 10;
+  background: var(--danger);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  padding: 4px 10px;
+  pointer-events: none;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── POPUP ── */
+.maplibregl-popup-content {
+  background: #fff;
+  color: #111 !important;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  padding: 14px 18px;
+  border-radius: 2px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+.maplibregl-popup-content b { color: #000; font-size: 0.8rem; }
+.maplibregl-popup-tip { border-top-color: #fff !important; }
+.maplibregl-popup-close-button { color: #555; font-size: 1rem; padding: 4px 8px; }
+
+/* ── PANEL ── */
+#panel {
+  grid-column: 2;
+  grid-row: 1;
+  width: var(--panel-w);
+  background: var(--dark);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.panel-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--off-white);
+  margin-bottom: 2px;
+}
+
+.panel-subtitle {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.panel-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--safe);
+  flex-shrink: 0;
+  animation: dot-blink 2.4s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(92,219,149,0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(92,219,149,0); }
+}
+
+.status-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--safe);
+  letter-spacing: 0.06em;
+}
+
+.panel-time {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* ── PANEL BODY ── */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.section-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 16px 20px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── DRONE LIST ── */
+#droneList {
+  display: flex;
+  flex-direction: column;
+}
+
+.droneItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.18s;
+  position: relative;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.droneItem:hover { background: var(--dark2); }
+
+.droneItem::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.droneItem:hover::before  { background: var(--off-white); }
+.droneItem.threat::before { background: var(--danger); }
+.droneItem.warning::before{ background: var(--warn); }
+.droneItem.safe::before   { background: var(--safe); }
+
+.droneItem.tracked { background: rgba(92,219,149,0.06); }
+.droneItem.tracked::before { background: var(--safe); }
+
+/* ── TRACK BUTTON ── */
+.btn-track {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9rem;
+  width: 26px; height: 26px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-track:hover {
+  border-color: var(--safe);
+  color: var(--safe);
+  background: rgba(92,219,149,0.08);
+}
+
+.droneItem.tracked .btn-track {
+  border-color: var(--safe);
+  color: var(--safe);
+  background: rgba(92,219,149,0.15);
+  box-shadow: 0 0 8px rgba(92,219,149,0.3);
+}
+
+/* ── DRONE ICONS ── */
+.droneIcon {
+  width: 42px; height: 42px;
+  flex-shrink: 0;
+  transition: transform 0.15s linear;
+  color: var(--safe);
+  filter: drop-shadow(0 0 6px rgba(92,219,149,0.5)) drop-shadow(0 0 2px rgba(92,219,149,0.8));
+}
+
+.droneItem.warning .droneIcon { color: var(--warn);   filter: drop-shadow(0 0 6px rgba(245,166,35,0.5)); }
+.droneItem.threat  .droneIcon { color: var(--danger); filter: drop-shadow(0 0 6px rgba(255,92,92,0.5)); }
+.droneIcon svg { width: 100%; height: 100%; }
+
+.droneMarker .droneIcon {
+  width: 48px; height: 48px;
+  color: var(--safe);
+  filter: drop-shadow(0 0 8px rgba(92,219,149,0.7)) drop-shadow(0 0 2px rgba(92,219,149,1));
+}
+
+/* ── INFO STRIP ── */
+.info-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.info-cell {
+  background: var(--dark);
+  padding: 12px 14px;
+  transition: background 0.2s;
+}
+
+.info-cell:hover { background: var(--dark2); }
+
+.info-num {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--off-white);
+  letter-spacing: -0.03em;
+}
+
+.info-lbl {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* ── SATELLITE BUTTON ── */
+.btn-satellite {
+  margin: 12px 20px;
+  background: transparent;
+  border: 1px solid var(--border-mid);
+  color: var(--muted2);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-satellite:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--off-white);
+  background: rgba(255,255,255,0.03);
+}
+
+.btn-satellite.sat-active {
+  border-color: rgba(92,219,149,0.4);
+  color: var(--safe);
+  background: rgba(92,219,149,0.06);
+}
+
+.sat-indicator {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.btn-satellite.sat-active .sat-indicator {
+  background: var(--safe);
+  box-shadow: 0 0 6px rgba(92,219,149,0.6);
+}
+
+/* ── NO DRONES ── */
+.no-drones {
+  padding: 24px 20px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* ── FOOTER ── */
+.panel-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.footer-ver {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: rgba(240,240,238,0.18);
+}
+
+/* ── TIMELINE ── */
+#timeline {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  background: var(--dark);
+  border-top: 1px solid var(--border);
+  padding: 0;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px 0;
+  flex-shrink: 0;
+}
+
+.timeline-title {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.timeline-clock {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted2);
+}
+
+.timeline-track {
+  flex: 1;
+  position: relative;
+  margin: 4px 16px 6px;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.timeline-bg {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-50%);
+  border-radius: 1px;
+}
+
+.timeline-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--safe);
+  transform: translateY(-50%);
+  border-radius: 1px;
+  transform-origin: left;
+  opacity: 0.5;
+}
+
+.timeline-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline-playhead {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 28px;
+  background: var(--off-white);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  transition: left 0.1s linear;
+  box-shadow: 0 0 6px rgba(240,240,238,0.4), 0 0 12px rgba(240,240,238,0.15);
+  pointer-events: none;
+}
+
+.timeline-playhead::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--off-white);
+  box-shadow: 0 0 6px rgba(240,240,238,0.5);
+}
+
+.timeline-ticks {
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.timeline-tick {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  color: rgba(240,240,238,0.2);
+}
+
+/* Live indicator on timeline */
+.timeline-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--safe);
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.timeline-live:hover {
+  border-color: var(--safe);
+  background: rgba(92,219,149,0.06);
+}
+
+.timeline-live.active {
+  border-color: var(--safe);
+  background: rgba(92,219,149,0.1);
+}
+
+.timeline-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--safe);
+  animation: dot-blink 2.4s ease-in-out infinite;
+}
+
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <div id="map"></div>
+
+  <div id="panel">
+
+    <div class="panel-header">
+      <div class="panel-wordmark">SentiGuard</div>
+      <div class="panel-subtitle">Drone Monitoring System</div>
+      <div class="panel-status-row">
+        <div class="status-dot"></div>
+        <span class="status-label">SYSTEM OPERATIONAL</span>
+        <div class="panel-time" id="liveTime">--:--:--</div>
+      </div>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- Counters -->
+      <div class="info-strip">
+        <div class="info-cell">
+          <div class="info-num" id="countTotal">0</div>
+          <div class="info-lbl">Detected</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-num" style="color:var(--warn)" id="countWarn">0</div>
+          <div class="info-lbl">Warning</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-num" style="color:var(--danger)" id="countThreat">0</div>
+          <div class="info-lbl">Threat</div>
+        </div>
+      </div>
+
+      <!-- Satellite toggle -->
+      <button class="btn-satellite" id="btn-satellite">
+        <span class="sat-indicator"></span>
+        Satellite View
+      </button>
+
+      <div class="section-label">Active Contacts</div>
+      <div id="droneList">
+        <div class="no-drones">Waiting for data…</div>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <div class="footer-brand">SentiGuard</div>
+      <div class="footer-ver">v2.4</div>
+    </div>
+
+  </div>
+
+  <!-- TIMELINE -->
+  <div id="timeline">
+    <div class="timeline-header">
+      <span class="timeline-title">Flight History</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="timeline-clock" id="timelineClock">--:--:--</span>
+        <button class="timeline-live active" id="btn-live">
+          <span class="timeline-live-dot"></span>
+          LIVE
+        </button>
+      </div>
+    </div>
+    <div class="timeline-track" id="timelineTrack">
+      <div class="timeline-bg"></div>
+      <div class="timeline-fill" id="timelineFill"></div>
+      <canvas class="timeline-canvas" id="timelineCanvas"></canvas>
+      <div class="timeline-playhead" id="timelinePlayhead" style="left:100%"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function tick() {
+    const el = document.getElementById('liveTime');
+    if (el) el.textContent = new Date().toLocaleTimeString('pl-PL', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // Satellite toggle
+  let satActive = false;
+  const satBtn = document.getElementById('btn-satellite');
+  if (satBtn) {
+    satBtn.addEventListener('click', () => {
+      satActive = !satActive;
+      satBtn.classList.toggle('sat-active', satActive);
+      document.dispatchEvent(new CustomEvent('satellite-toggle', { detail: { active: satActive } }));
+    });
+  }
+</script>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
