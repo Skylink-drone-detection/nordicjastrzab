@@ -1,0 +1,10 @@
+default: scan_slave
+build_dir: C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1
+domains:
+  - name: scan_slave
+    build_dir: C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/scan_slave
+  - name: hci_ipc
+    build_dir: C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/hci_ipc
+flash_order:
+  - hci_ipc
+  - scan_slave

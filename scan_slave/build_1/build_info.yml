@@ -1,0 +1,27 @@
+cmake:
+  application:
+    source-dir: 'C:/ncs/v3.2.4/zephyr/share/sysbuild'
+  board:
+    name: 'nrf7002dk'
+    path:
+     - 'C:/ncs/v3.2.4/zephyr/boards/nordic/nrf7002dk'
+    qualifiers: 'nrf5340/cpuapp'
+    revision: ''
+  images:
+   - name: 'scan_slave'
+     source-dir: 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave'
+     type: 'MAIN'
+   - name: 'hci_ipc'
+     source-dir: ''
+  kconfig:
+    files:
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/_sysbuild/empty.conf'
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/_sysbuild/empty.conf'
+    user-files:
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/_sysbuild/empty.conf'
+  sysbuild: 'true'
+version: '0.1.0'
+west:
+  command: 'C:\ncs\toolchains\fd21892d0f\opt\bin\Scripts\west build --build-dir c:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1 c:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave --pristine --board nrf7002dk/nrf5340/cpuapp -- -DDEBUG_THREAD_INFO=On -DCONFIG_DEBUG_THREAD_INFO=y -Dscan_slave_DEBUG_THREAD_INFO=On'
+  topdir: 'c:\ncs\v3.2.4'
+  version: '1.4.0'

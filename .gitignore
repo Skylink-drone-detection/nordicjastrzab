@@ -1,0 +1,49 @@
+# --- Oprogramowanie wbudowane (nRF54L15 / nRF5340) ---
+# Ignoruj katalogi budowania (standard w nRF Connect SDK / Zephyr)
+build/
+zephyr/
+modules/
+tools/
+# Pliki generowane przez CMake i kompilatory
+*.ninja
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# --- Web / Bun / Vite (SentiGuard UI) ---
+# Zależności instalowane przez Bun
+node_modules/
+# Wynik budowania produkcyjnego Vite
+dist/
+# Pliki środowiskowe i logi
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+# --- Dane dynamiczne projektu ---
+# Plik panel_data.json jest generowany w czasie rzeczywistym i nie powinien być w repozytorium
+panel_data.json
+
+# --- Python (Mostki i symulatory) ---
+# Pliki tymczasowe Pythona
+__pycache__/
+*.py[cod]
+*$py.class
+# Wirtualne środowiska
+.venv/
+venv/
+ENV/
+
+# --- Systemowe i IDE ---
+.DS_Store
+Thumbs.db
+# Ustawienia VS Code (opcjonalnie można odkomentować, jeśli pracujesz w zespole)
+# .vscode/
+# Pliki tymczasowe edytorów
+*.swp
+*.bak
+*~

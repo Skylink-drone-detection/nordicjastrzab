@@ -1,0 +1,55 @@
+cmake:
+  application:
+    configuration-dir: 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc'
+    source-dir: 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc'
+  board:
+    name: 'nrf7002dk'
+    path:
+     - 'C:/ncs/v3.2.4/zephyr/boards/nordic/nrf7002dk'
+    qualifiers: 'nrf5340/cpunet'
+    revision: ''
+  devicetree:
+    bindings-dirs:
+     - 'C:/ncs/v3.2.4/nrf/dts/bindings'
+     - 'C:/ncs/v3.2.4/zephyr/dts/bindings'
+    files:
+     - 'C:/ncs/v3.2.4/zephyr/boards/nordic/nrf7002dk/nrf7002dk_nrf5340_cpunet.dts'
+    include-dirs:
+     - 'C:/ncs/v3.2.4/nrf/include'
+     - 'C:/ncs/v3.2.4/nrf/dts/common'
+     - 'C:/ncs/v3.2.4/nrf/dts/riscv'
+     - 'C:/ncs/v3.2.4/nrf/dts/arm'
+     - 'C:/ncs/v3.2.4/nrf/dts'
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc/dts/arm'
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc/dts'
+     - 'C:/ncs/v3.2.4/zephyr/include'
+     - 'C:/ncs/v3.2.4/zephyr/include/zephyr'
+     - 'C:/ncs/v3.2.4/zephyr/dts/common'
+     - 'C:/ncs/v3.2.4/zephyr/dts/vendor'
+     - 'C:/ncs/v3.2.4/zephyr/dts/rx'
+     - 'C:/ncs/v3.2.4/zephyr/dts/x86'
+     - 'C:/ncs/v3.2.4/zephyr/dts/xtensa'
+     - 'C:/ncs/v3.2.4/zephyr/dts/sparc'
+     - 'C:/ncs/v3.2.4/zephyr/dts/riscv'
+     - 'C:/ncs/v3.2.4/zephyr/dts/posix'
+     - 'C:/ncs/v3.2.4/zephyr/dts/arm64'
+     - 'C:/ncs/v3.2.4/zephyr/dts/arm'
+     - 'C:/ncs/v3.2.4/zephyr/dts/arc'
+     - 'C:/ncs/v3.2.4/zephyr/dts'
+  kconfig:
+    files:
+     - 'C:/ncs/v3.2.4/zephyr/boards/nordic/nrf7002dk/nrf7002dk_nrf5340_cpunet_defconfig'
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc/prj.conf'
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/scan_slave/build_1/hci_ipc/zephyr/.config.sysbuild'
+    user-files:
+     - 'C:/ncs/v3.2.4/zephyr/samples/bluetooth/hci_ipc/prj.conf'
+  toolchain:
+    name: 'zephyr'
+    path: 'C:/ncs/toolchains/fd21892d0f/opt/zephyr-sdk'
+  vendor-specific:
+    nordic:
+      svdfile: 'C:/ncs/v3.2.4/modules/hal/nordic/nrfx/bsp/stable/mdk/nrf5340_network.svd'
+  zephyr:
+    version: '4.2.99'
+    zephyr-base: 'C:/ncs/v3.2.4/zephyr'
+version: '0.1.0'
